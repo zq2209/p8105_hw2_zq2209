@@ -1,0 +1,7 @@
+---
+title: "p8105_hw2_zq2209"
+author: "Zining Qi"
+date: "2022-10-03"
+output: github_document
+---
+
