@@ -57,5 +57,66 @@ merged_trash_wheel = bind_rows(mr_trash_wheel, prof_trash_wheel) %>%
 ```
 
 
+# Problem 3
+
+```{r}
+# Data cleaning in pols-month.csv
+pols = read_csv("/Users/qizining/Desktop/p8105_hw2_zq2209/fivethirtyeight_datasets/pols-month.csv") %>%
+  janitor::clean_names() %>%
+  separate(col = mon, into = c("year", "month", "day"), sep = "-") %>%
+  mutate(month = recode(month, "01" = "Janurary", "02" = "Feburary", "03" = "March", "04" = "April", "05" = "May", "06" = "June", "07" = "July", "08" = "August", "09" = "September", "10" = "October", "11" = "November", "12" = "December")) %>%
+  pivot_longer(c(prez_gop, prez_dem), names_to = "president", values_to = "value") %>%
+  mutate(value = replace(value, value == 0, NA ),
+         president = recode(president, "prez_gop" = "gop", "prez_dem" = "dem")) %>%
+  drop_na() %>%
+  select(-c(day, value))
+```
+ 
+```{r}
+# Data cleaning in snp.csv
+snp = read_csv("/Users/qizining/Desktop/p8105_hw2_zq2209/fivethirtyeight_datasets/snp.csv") %>%
+  janitor::clean_names() %>%
+  separate(col = date, into = c("month", "day", "year"), sep = "/") %>%
+  mutate(month = recode(month, "1" = "Janurary", "2" = "Feburary", "3" = "March", "4" = "April", "5" = "May", "6" = "June", "7" = "July", "8" = "August", "9" = "September", "10" = "October", "11" = "November", "12" = "December"),
+         year = as.numeric(year),
+         year = ifelse(year >= 50, year + 1900, year + 2000),
+         ) %>%
+  mutate(year = as.character(year)) %>%
+  arrange(year, month) %>%
+  select(year, month, close)
+```
+
+```{r}
+# Data cleaning in unemployment.csv
+unemployment = read_csv("/Users/qizining/Desktop/p8105_hw2_zq2209/fivethirtyeight_datasets/unemployment.csv") %>%
+  janitor::clean_names() %>%
+  rename(Janurary = jan, Feburary = feb, March = mar, April = apr, May = may, June = jun, July = jun, August = aug, September = sep, October = oct, November = nov, December = dec) %>%
+  pivot_longer(
+    Janurary:December,
+    names_to = "month",
+    values_to = "unemployment"
+  ) %>%
+  mutate(year = as.character(year))
+```
+
+```{r}
+merged_data = 
+  pols %>% left_join(snp, by = c("year", "month"))
+```
+```{r}
+full_data =
+  merged_data %>% left_join(unemployment, by = c("year", "month"))
+```
+
+
+
+
+
+
+
+
+
+
+
 
 
