@@ -21,10 +21,17 @@ trans_ent =
     line, station_name, station_latitude, station_longitude, 
     starts_with("route"), entry, exit_only, vending, entrance_type, 
     ada) %>% 
+  pivot_longer(
+    route1:route11,
+    names_to = "route",
+    values_to = "route_value"
+  ) %>%
+  filter(!is.na(route_value)) %>%
+  unique() %>%
   mutate(entry = ifelse(entry == "YES", TRUE, FALSE))
 ```
 
-The table is 1868 x 20. There are 11 routes variable and 9 other variables, which are line, station, name, station latitude / longitude, served, entry, vending, entrance type, and ADA compliance. So far, the cleaning steps are clean names, select required variables and change entry to logic variable. 
+The table is 1582 x 20. There are 11 routes variable and 9 other variables, which are line, station, name, station latitude / longitude, served, entry, vending, entrance type, and ADA compliance. So far, the cleaning steps are clean names, select required variables and change entry to logic variable. 
 
 
 ```{r}
@@ -51,35 +58,54 @@ trans_ent %>%
   mean
 ```
 
-There are 37.70% without vending entrance.
+There are 33.10% without vending entrance.
 
 ```{r}
-trans_ent %>% 
+data1 = read_csv(
+    "/Users/qizining/Desktop/p8105_hw2_zq2209/NYC_Transit_Subway_Entrance_And_Exit_Data.csv",
+    col_types = cols(Route8 = "c", Route9 = "c", Route10 = "c", Route11 = "c")) %>% 
+  janitor::clean_names() %>% 
+  select(
+    line, station_name, station_latitude, station_longitude, 
+    starts_with("route"), entry, exit_only, vending, entrance_type, 
+    ada) %>%  
   pivot_longer(
     route1:route11,
-    names_to = "route_num",
-    values_to = "route") %>% 
-  filter(route == "A") %>% 
-  select(station_name, line) %>% 
-  distinct
-
-trans_ent %>% 
-  pivot_longer(
-    route1:route11,
-    names_to = "route_num",
-    values_to = "route") %>% 
-  filter(route == "A", ada == TRUE) %>% 
+    names_to = "route",
+    values_to = "route_value") %>% 
+  filter(route_value == "A") %>% 
   select(station_name, line) %>% 
   distinct
 ```
 
+There are 60 rows.
+
+```{r}
+data2 = read_csv(
+    "/Users/qizining/Desktop/p8105_hw2_zq2209/NYC_Transit_Subway_Entrance_And_Exit_Data.csv",
+    col_types = cols(Route8 = "c", Route9 = "c", Route10 = "c", Route11 = "c")) %>% 
+  janitor::clean_names() %>% 
+  select(
+    line, station_name, station_latitude, station_longitude, 
+    starts_with("route"), entry, exit_only, vending, entrance_type, 
+    ada) %>% 
+  pivot_longer(
+    route1:route11,
+    names_to = "route",
+    values_to = "route_value") %>% 
+  filter(route_value == "A", ada == TRUE) %>% 
+  select(station_name, line) %>% 
+  distinct
+```
+
+There are 17 rows
 
 
 
 # Problem 2
 ```{r}
 ## read and clean Mr Trash Wheel sheet
-mr_trash_wheel_raw = read_excel("Trash Wheel Collection Data.xlsx", sheet = "Mr. Trash Wheel", range = "A2:N535", col_names = TRUE)
+mr_trash_wheel_raw = read_excel("Trash Wheel Collection Data.xlsx", sheet = "Mr. Trash Wheel", range = "A2:N550", col_names = TRUE)
 mr_trash_wheel = mr_trash_wheel_raw %>% drop_na() %>%
   janitor::clean_names() %>%
   mutate(sports_balls = as.integer(round(sports_balls, 0)),
@@ -111,7 +137,7 @@ nrow(merged_trash_wheel)
 ncol(merged_trash_wheel)
 ```
 
-There are 568 rows and 15 columns in merged dataset. The variables are name, dumpster, month, year, date, weight_tons, "volume_cubic_yards" "plastic_bottles" "polystyrene", "cigarette_butts" "glass_bottles" "grocery_bags"  "chip_bags"          "sports_balls"       "homes_powered"    
+There are 568 rows and 15 columns in merged dataset. The variables are name, dumpster, month, year, date, weight_tons, "volume_cubic_yards" "plastic_bottles" "polystyrene", "cigarette_butts" "glass_bottles" "grocery_bags"  "chip_bags" "sports_balls" "homes_powered"    
       
 ```{r}
 # Total weight of trash collected by Professor Trash Wheel
@@ -184,7 +210,8 @@ unemployment = read_csv("/Users/qizining/Desktop/p8105_hw2_zq2209/fivethirtyeigh
     names_to = "month",
     values_to = "unemployment"
   ) %>%
-  mutate(year = as.character(year))
+  mutate(year = as.character(year)) %>%
+  arrange(year, month)
 
 nrow(unemployment)
 ncol(unemployment)
@@ -194,17 +221,17 @@ There are 816 rows and 3 columns in this cleaned dataset. The dataset range from
 
 ```{r}
 merged_data = 
-  pols %>% left_join(snp, by = c("year", "month"))
+  pols %>% full_join(snp, by = c("year", "month"))
 ```
 ```{r}
 full_data =
-  merged_data %>% left_join(unemployment, by = c("year", "month"))
+  merged_data %>% full_join(unemployment, by = c("year", "month"))
 
 nrow(full_data)
 ncol(full_data)
 ```
 
-There are 822 rows and 11 columns in this merged dataset. The dataset range from 1947 to 2015. And the variables are "year" "month" "unemplyment" "gov_gop" "sen_gop" "rep_gop" "gov_dem" "sen_dem"   "rep_dem"   "president" "close".
+There are 896 rows and 11 columns in this merged dataset. The dataset range from 1947 to 2015. And the variables are "year" "month" "unemplyment" "gov_gop" "sen_gop" "rep_gop" "gov_dem" "sen_dem"   "rep_dem"   "president" "close".
 
 
 
