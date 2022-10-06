@@ -99,28 +99,74 @@ weather_df %>%
 
 ## general summarise
 ```{r}
-
+weather_df %>%
+  group_by(name, month) %>%
+  summarize(
+    mean_tmax = mean(tmax, na.rm = TRUE),
+    mean_prec = mean(prcp, na.rm = TRUE),
+    median_tmax = median(tmax),
+    sd_tmax = sd(tmax))
 ```
 
 ```{r}
-
+weather_df %>%
+  group_by(name, month) %>%
+  summarize(
+    across(prcp:tmin, mean)) # This is Data Frame!!!
 ```
 
 
 ```{r}
-
+ weather_df %>%
+  group_by(name, month) %>%
+  summarize(
+    mean_tmax = mean(tmax, na.rm = TRUE)) %>%
+  ggplot(aes(x = month, y = mean_tmax, color = name)) +
+  geom_point() +
+  geom_path()
 ```
 
 ```{r}
-
+weather_df %>%
+  group_by(name, month) %>%
+  summarize(mean_tmax = mean(tmax, na.rm = TRUE)) %>% 
+  pivot_wider(
+    names_from = name,
+    values_from = mean_tmax) %>% 
+  knitr::kable(digits = 1)
 ```
 
+## grouped mutate
+```{r}
+weather_df %>%
+  group_by(name) %>%
+  mutate(
+    mean_tmax = mean(tmax, na.rm = TRUE),
+    centered_tmax = tmax - mean_tmax) %>% 
+  ggplot(aes(x = date, y = centered_tmax, color = name)) + 
+    geom_point() 
+```
 
+`lagged observations`
+```{r}
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(
+    yesterday_tmax = lag(tmax),
+    tmax_change = tmax - yesterday_tmax
+  ) %>% 
+  summarize(
+    sd_tmax_change = sd(tmax_change, na.rm = TRUE)
+  )
+```
 
-
-
-
-
-
-
+## window function
+```{r}
+weather_df %>%
+  group_by(name, month) %>%
+  mutate(temp_ranking = min_rank(desc(tmax)))  %>%
+  #ranking
+  filter(temp_ranking < 4) %>% 
+  arrange(name, month, temp_ranking)
+```
 

@@ -214,3 +214,165 @@ weather_df %>%
     ##    Waterhole_WA  172      193
 
 ## general summarise
+
+``` r
+weather_df %>%
+  group_by(name, month) %>%
+  summarize(
+    mean_tmax = mean(tmax, na.rm = TRUE),
+    mean_prec = mean(prcp, na.rm = TRUE),
+    median_tmax = median(tmax),
+    sd_tmax = sd(tmax))
+```
+
+    ## `summarise()` has grouped output by 'name'. You can override using the
+    ## `.groups` argument.
+
+    ## # A tibble: 36 × 6
+    ## # Groups:   name [3]
+    ##    name           month      mean_tmax mean_prec median_tmax sd_tmax
+    ##    <chr>          <date>         <dbl>     <dbl>       <dbl>   <dbl>
+    ##  1 CentralPark_NY 2017-01-01      5.98      39.5         6.1    5.43
+    ##  2 CentralPark_NY 2017-02-01      9.28      22.5         8.3    6.02
+    ##  3 CentralPark_NY 2017-03-01      8.22      43.0         8.3    6.44
+    ##  4 CentralPark_NY 2017-04-01     18.3       32.5        18.3    5.85
+    ##  5 CentralPark_NY 2017-05-01     20.1       52.3        19.4    5.40
+    ##  6 CentralPark_NY 2017-06-01     26.3       40.4        27.2    4.65
+    ##  7 CentralPark_NY 2017-07-01     28.7       34.3        29.4    3.29
+    ##  8 CentralPark_NY 2017-08-01     27.2       27.4        27.2    2.91
+    ##  9 CentralPark_NY 2017-09-01     25.4       17.0        26.1    3.78
+    ## 10 CentralPark_NY 2017-10-01     21.8       34.3        22.2    3.97
+    ## # … with 26 more rows
+
+``` r
+weather_df %>%
+  group_by(name, month) %>%
+  summarize(
+    across(prcp:tmin, mean)) # This is Data Frame!!!
+```
+
+    ## `summarise()` has grouped output by 'name'. You can override using the
+    ## `.groups` argument.
+
+    ## # A tibble: 36 × 5
+    ## # Groups:   name [3]
+    ##    name           month       prcp  tmax   tmin
+    ##    <chr>          <date>     <dbl> <dbl>  <dbl>
+    ##  1 CentralPark_NY 2017-01-01  39.5  5.98  0.748
+    ##  2 CentralPark_NY 2017-02-01  22.5  9.28  1.45 
+    ##  3 CentralPark_NY 2017-03-01  43.0  8.22 -0.177
+    ##  4 CentralPark_NY 2017-04-01  32.5 18.3   9.66 
+    ##  5 CentralPark_NY 2017-05-01  52.3 20.1  12.2  
+    ##  6 CentralPark_NY 2017-06-01  40.4 26.3  18.2  
+    ##  7 CentralPark_NY 2017-07-01  34.3 28.7  21.0  
+    ##  8 CentralPark_NY 2017-08-01  27.4 27.2  19.5  
+    ##  9 CentralPark_NY 2017-09-01  17.0 25.4  17.4  
+    ## 10 CentralPark_NY 2017-10-01  34.3 21.8  13.9  
+    ## # … with 26 more rows
+
+``` r
+ weather_df %>%
+  group_by(name, month) %>%
+  summarize(
+    mean_tmax = mean(tmax, na.rm = TRUE)) %>%
+  ggplot(aes(x = month, y = mean_tmax, color = name)) +
+  geom_point() +
+  geom_path()
+```
+
+    ## `summarise()` has grouped output by 'name'. You can override using the
+    ## `.groups` argument.
+
+![](EDA_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+
+``` r
+weather_df %>%
+  group_by(name, month) %>%
+  summarize(mean_tmax = mean(tmax, na.rm = TRUE)) %>% 
+  pivot_wider(
+    names_from = name,
+    values_from = mean_tmax) %>% 
+  knitr::kable(digits = 1)
+```
+
+    ## `summarise()` has grouped output by 'name'. You can override using the
+    ## `.groups` argument.
+
+| month      | CentralPark_NY | Waikiki_HA | Waterhole_WA |
+|:-----------|---------------:|-----------:|-------------:|
+| 2017-01-01 |            6.0 |       27.8 |         -1.4 |
+| 2017-02-01 |            9.3 |       27.2 |          0.0 |
+| 2017-03-01 |            8.2 |       29.1 |          1.7 |
+| 2017-04-01 |           18.3 |       29.7 |          3.9 |
+| 2017-05-01 |           20.1 |       30.1 |         10.1 |
+| 2017-06-01 |           26.3 |       31.3 |         12.9 |
+| 2017-07-01 |           28.7 |       31.8 |         16.3 |
+| 2017-08-01 |           27.2 |       32.0 |         19.6 |
+| 2017-09-01 |           25.4 |       31.7 |         14.2 |
+| 2017-10-01 |           21.8 |       30.3 |          8.3 |
+| 2017-11-01 |           12.3 |       28.4 |          1.4 |
+| 2017-12-01 |            4.5 |       26.5 |          2.2 |
+
+## grouped mutate
+
+``` r
+weather_df %>%
+  group_by(name) %>%
+  mutate(
+    mean_tmax = mean(tmax, na.rm = TRUE),
+    centered_tmax = tmax - mean_tmax) %>% 
+  ggplot(aes(x = date, y = centered_tmax, color = name)) + 
+    geom_point() 
+```
+
+    ## Warning: Removed 3 rows containing missing values (geom_point).
+
+![](EDA_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+
+`lagged observations`
+
+``` r
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(
+    yesterday_tmax = lag(tmax),
+    tmax_change = tmax - yesterday_tmax
+  ) %>% 
+  summarize(
+    sd_tmax_change = sd(tmax_change, na.rm = TRUE)
+  )
+```
+
+    ## # A tibble: 3 × 2
+    ##   name           sd_tmax_change
+    ##   <chr>                   <dbl>
+    ## 1 CentralPark_NY           4.45
+    ## 2 Waikiki_HA               1.23
+    ## 3 Waterhole_WA             3.13
+
+## window function
+
+``` r
+weather_df %>%
+  group_by(name, month) %>%
+  mutate(temp_ranking = min_rank(desc(tmax)))  %>%
+  #ranking
+  filter(temp_ranking < 4) %>% 
+  arrange(name, month, temp_ranking)
+```
+
+    ## # A tibble: 149 × 8
+    ## # Groups:   name, month [36]
+    ##    name           id          date        prcp  tmax  tmin month      temp_ran…¹
+    ##    <chr>          <chr>       <date>     <dbl> <dbl> <dbl> <date>          <int>
+    ##  1 CentralPark_NY USW00094728 2017-01-12    13  18.9   8.3 2017-01-01          1
+    ##  2 CentralPark_NY USW00094728 2017-01-13     0  16.7   0   2017-01-01          2
+    ##  3 CentralPark_NY USW00094728 2017-01-26     5  13.3   6.1 2017-01-01          3
+    ##  4 CentralPark_NY USW00094728 2017-02-24     0  21.1  14.4 2017-02-01          1
+    ##  5 CentralPark_NY USW00094728 2017-02-19     0  18.3  11.7 2017-02-01          2
+    ##  6 CentralPark_NY USW00094728 2017-02-23     0  18.3   6.7 2017-02-01          2
+    ##  7 CentralPark_NY USW00094728 2017-03-01    30  21.1  12.2 2017-03-01          1
+    ##  8 CentralPark_NY USW00094728 2017-03-02     0  17.8   1.7 2017-03-01          2
+    ##  9 CentralPark_NY USW00094728 2017-03-25     3  16.7   5.6 2017-03-01          3
+    ## 10 CentralPark_NY USW00094728 2017-04-16     0  30.6  15   2017-04-01          1
+    ## # … with 139 more rows, and abbreviated variable name ¹​temp_ranking
